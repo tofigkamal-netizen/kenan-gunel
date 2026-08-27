@@ -205,13 +205,20 @@
   .sub{ font-size:14px; color:#a7b0a2; margin:0 0 32px; }
   .search-row{ position:relative; margin-bottom:8px; }
   #q{
-    width:100%; padding:16px 20px; font-size:17px; font-family:'Inter', sans-serif;
+    width:100%; padding:16px 44px 16px 20px; font-size:17px; font-family:'Inter', sans-serif;
     border-radius:999px; border:1px solid rgba(200,161,90,0.4);
     background:rgba(255,255,255,0.045); color:var(--paper-2); outline:none;
     transition:border-color .2s, background .2s;
   }
   #q::placeholder{color:#7d8778;}
   #q:focus{ border-color:var(--gold); background:rgba(255,255,255,0.08); }
+  .clear-btn{
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.08); color:var(--gold-light); font-size:14px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .clear-btn:hover{ background:rgba(255,255,255,0.15); }
   .status{ min-height:20px; font-size:13px; color:#8b9587; margin:14px 0 6px; }
   .status.err{color:#e2a08b;}
   #results{ margin-top:22px; display:flex; flex-direction:column; gap:14px; }
@@ -251,8 +258,7 @@
   .table-badge .num{ font-family:'Cormorant Garamond', serif; font-size:30px; font-weight:700; line-height:1; }
   .table-badge .lbl{ font-size:10px; letter-spacing:0.12em; text-transform:uppercase; margin-top:4px; opacity:0.85; }
   .table-badge .tap-hint{ font-size:9px; margin-top:3px; opacity:0.7; }
-  .empty-hint{ font-size:13px; color:#79826f; margin-top:30px; line-height:1.6; }
-  footer{ margin-top:48px; font-size:11px; color:#5c6559; letter-spacing:0.04em; }
+  .empty-hint{ font-size:16px; font-weight:600; color:#e4c98a; margin-top:34px; line-height:1.6; }
 
   /* ============ FLOOR PLAN POSTER ============ */
   .plan-overlay{
@@ -486,13 +492,12 @@
 
     <div class="search-row">
       <input id="q" type="text" placeholder="Qonağın adını yazın" autocomplete="off" disabled />
+      <button id="clearQ" class="clear-btn" aria-label="Təmizlə" style="display:none;">✕</button>
     </div>
     <div class="status" id="status">Məlumatlar yüklənir…</div>
 
     <div id="results"></div>
     <div class="empty-hint" id="hint"></div>
-
-    <footer>Kənan &amp; Günelin toyuna xoş gəlmisiniz</footer>
   </div>
 
 <script>
@@ -577,6 +582,7 @@
   const resultsEl = document.getElementById('results');
   const hintEl = document.getElementById('hint');
   const input = document.getElementById('q');
+  const clearBtn = document.getElementById('clearQ');
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
   const tableListEl = document.getElementById('tableList');
@@ -879,18 +885,25 @@
   }
 
   input.addEventListener('focus', () => {
-    // klaviatura açılanda axtarış qutusu telefonun yuxarısına qalxsın
+    // klaviatura açılanda səhifə tam yuxarı qalxsın
     setTimeout(() => {
-      input.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      window.scrollBy(0, -16); // yuxarıda balaca boşluq saxla
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 250);
   });
 
   input.addEventListener('input', () => {
     const q = normalize(input.value);
+    clearBtn.style.display = q ? 'flex' : 'none';
     if(!q){ renderSearch([]); return; }
     renderSearch(rows.filter(r => normalize(r.ad).includes(q)));
-    input.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    renderSearch([]);
+    input.focus();
   });
 
   (async function init(){
