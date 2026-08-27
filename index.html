@@ -27,7 +27,7 @@
     font-family:'Inter', sans-serif;
     color:var(--paper-2);
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     justify-content:center;
     padding:40px 16px;
   }
@@ -491,7 +491,9 @@
     <p class="sub">Adını yazın, masasını görün. Gələndə adının üstünə vurub qeyd edin.</p>
 
     <div class="search-row">
-      <input id="q" type="text" placeholder="Qonağın adını yazın" autocomplete="off" disabled />
+      <input id="q" type="text" placeholder="Qonağın adını yazın"
+        autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
+        inputmode="text" enterkeyhint="search" name="guest-search-field" disabled />
       <button id="clearQ" class="clear-btn" aria-label="Təmizlə" style="display:none;">✕</button>
     </div>
     <div class="status" id="status">Məlumatlar yüklənir…</div>
