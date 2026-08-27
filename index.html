@@ -235,7 +235,8 @@
   body.search-mode .hero-block{
     opacity:0; max-height:0 !important; margin:0 !important; pointer-events:none;
   }
-  body.search-mode .wrap{ padding-top:56px; }
+  body.search-mode{ padding-top:70px; }
+  body.search-mode .wrap{ padding-top:0; }
   body.search-mode #q{ padding-left:46px; }
   .status{ min-height:20px; font-size:13px; color:#8b9587; margin:14px 0 6px; }
   .status.err{color:#e2a08b;}
@@ -959,7 +960,6 @@
       updateStats();
       statusEl.textContent = rows.length + ' qeyd (' + rows.reduce((s,r)=>s+(r.sayi||1),0) + ' nəfər) yükləndi.';
       input.disabled = false;
-      input.focus();
     } catch(err){
       statusEl.textContent = 'Məlumatlar yüklənmədi: ' + err.message;
       statusEl.classList.add('err');
