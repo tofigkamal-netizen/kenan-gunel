@@ -223,8 +223,8 @@
   .status.err{color:#e2a08b;}
   #results{ margin-top:22px; display:flex; flex-direction:column; gap:14px; }
   .card{
-    background:var(--paper-2); color:var(--ink); border-radius:16px; padding:22px 24px;
-    display:flex; align-items:center; justify-content:space-between; text-align:left;
+    background:var(--paper-2); color:var(--ink); border-radius:16px; padding:16px 18px;
+    display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:14px;
     box-shadow:0 18px 40px rgba(0,0,0,0.30); animation:rise .35s ease both;
     border:1px solid rgba(200,161,90,0.45);
   }
@@ -233,6 +233,7 @@
   .name-btn{
     display:flex; align-items:center; gap:10px; cursor:pointer;
     background:none; border:none; padding:0; text-align:left; font:inherit;
+    flex:1; min-width:0;
   }
   .name-check{
     flex-shrink:0; width:22px; height:22px; border-radius:50%;
@@ -244,20 +245,20 @@
   .card.arrived .name{ text-decoration:line-through; color:#8a8f83; }
   .card.arrived .extra, .card.arrived .headcount{ color:#9a9d92; }
 
-  .card .name{ font-family:'Cormorant Garamond', serif; font-size:23px; font-weight:600; margin:0 0 2px; color:var(--ink); display:inline; }
+  .card .name{ font-family:'Cormorant Garamond', serif; font-size:21px; font-weight:600; margin:0 0 2px; color:var(--ink); display:inline; }
   .card .headcount{ font-family:'Inter', sans-serif; font-size:12px; font-weight:500; color:var(--gold-dark); margin-left:8px; vertical-align:middle; }
   .card .extra{ font-size:13px; color:var(--muted); margin:2px 0 0; }
 
   .table-badge{
-    flex-shrink:0; margin-left:16px; text-align:center; cursor:pointer;
+    flex-shrink:0; cursor:pointer;
     background:linear-gradient(180deg, var(--gold-light), var(--gold-dark));
-    color:#2b220c; border-radius:12px; padding:10px 18px; min-width:74px;
+    color:#2b220c; border-radius:11px; padding:6px 12px; min-width:52px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
     transition:transform .15s ease;
   }
   .table-badge:hover{ transform:scale(1.04); }
-  .table-badge .num{ font-family:'Cormorant Garamond', serif; font-size:30px; font-weight:700; line-height:1; }
-  .table-badge .lbl{ font-size:10px; letter-spacing:0.12em; text-transform:uppercase; margin-top:4px; opacity:0.85; }
-  .table-badge .tap-hint{ font-size:9px; margin-top:3px; opacity:0.7; }
+  .table-badge .num{ font-family:'Cormorant Garamond', serif; font-size:20px; font-weight:700; line-height:1.1; }
+  .table-badge .lbl{ font-size:8px; letter-spacing:0.1em; text-transform:uppercase; opacity:0.85; }
   .empty-hint{ font-size:16px; font-weight:600; color:#e4c98a; margin-top:34px; line-height:1.6; }
 
   /* ============ FLOOR PLAN POSTER ============ */
@@ -380,8 +381,6 @@
   @media (max-width:420px){
     .couple{font-size:40px;}
     h1{font-size:22px;}
-    .card{flex-direction:column; align-items:flex-start; gap:14px;}
-    .table-badge{margin-left:0; align-self:flex-start;}
     .topbar{top:12px; left:12px;}
   }
 </style>
@@ -859,6 +858,10 @@
       const card = document.createElement('div');
       card.className = 'card' + (r.geldi ? ' arrived' : '');
       card.innerHTML = `
+        <div class="table-badge" title="Masadakı digər qonaqları göstər">
+          <div class="num">${r.masa}</div>
+          <div class="lbl">masa</div>
+        </div>
         <button class="name-btn">
           <span class="name-check">✓</span>
           <span>
@@ -866,11 +869,6 @@
             ${r.qeyd ? `<p class="extra">${r.qeyd}</p>` : ''}
           </span>
         </button>
-        <div class="table-badge" title="Masadakı digər qonaqları göstər">
-          <div class="num">${r.masa}</div>
-          <div class="lbl">masa</div>
-          <div class="tap-hint">toxunun ↗</div>
-        </div>
       `;
       card.querySelector('.name-btn').addEventListener('click', () => toggleArrived(r.id));
       card.querySelector('.table-badge').addEventListener('click', () => openTable(r.masa));
@@ -886,11 +884,17 @@
     buildPosterBadges();
   }
 
+  let hasScrolledForSearch = false;
+
+  function scrollSearchToTop(){
+    const rect = input.getBoundingClientRect();
+    const targetY = window.scrollY + rect.top - 14; // yuxarıda balaca boşluq
+    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+  }
+
   input.addEventListener('focus', () => {
-    // klaviatura açılanda səhifə tam yuxarı qalxsın
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 250);
+    hasScrolledForSearch = false;
+    setTimeout(() => { scrollSearchToTop(); hasScrolledForSearch = true; }, 300);
   });
 
   input.addEventListener('input', () => {
@@ -898,8 +902,13 @@
     clearBtn.style.display = q ? 'flex' : 'none';
     if(!q){ renderSearch([]); return; }
     renderSearch(rows.filter(r => normalize(r.ad).includes(q)));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if(!hasScrolledForSearch){
+      scrollSearchToTop();
+      hasScrolledForSearch = true;
+    }
   });
+
+  input.addEventListener('blur', () => { hasScrolledForSearch = false; });
 
   clearBtn.addEventListener('click', () => {
     input.value = '';
