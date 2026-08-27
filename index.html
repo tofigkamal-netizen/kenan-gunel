@@ -878,10 +878,19 @@
     buildPosterBadges();
   }
 
+  input.addEventListener('focus', () => {
+    // klaviatura açılanda axtarış qutusu telefonun yuxarısına qalxsın
+    setTimeout(() => {
+      input.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      window.scrollBy(0, -16); // yuxarıda balaca boşluq saxla
+    }, 250);
+  });
+
   input.addEventListener('input', () => {
     const q = normalize(input.value);
     if(!q){ renderSearch([]); return; }
     renderSearch(rows.filter(r => normalize(r.ad).includes(q)));
+    input.scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
 
   (async function init(){
