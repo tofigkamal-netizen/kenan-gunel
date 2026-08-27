@@ -202,13 +202,13 @@
 
   .flourish{ width:120px; height:14px; margin:0 auto 30px; opacity:0.7; }
   h1{ font-family:'Cormorant Garamond', serif; font-weight:600; font-style:italic; font-size:28px; line-height:1.2; margin:0 0 8px; color:var(--paper-2); }
-  .sub{ font-size:14px; color:#a7b0a2; margin:0 0 32px; }
+  .sub{ font-size:14px; color:#a7b0a2; margin:0 0 32px; transition:opacity .2s ease; }
   .search-row{ position:relative; margin-bottom:8px; }
   #q{
-    width:100%; padding:16px 44px 16px 20px; font-size:17px; font-family:'Inter', sans-serif;
+    width:100%; padding:16px 44px; font-size:17px; font-family:'Inter', sans-serif;
     border-radius:999px; border:1px solid rgba(200,161,90,0.4);
     background:rgba(255,255,255,0.045); color:var(--paper-2); outline:none;
-    transition:border-color .2s, background .2s;
+    transition:border-color .2s, background .2s, padding-left .2s ease;
   }
   #q::placeholder{color:#7d8778;}
   #q:focus{ border-color:var(--gold); background:rgba(255,255,255,0.08); }
@@ -219,6 +219,24 @@
     display:flex; align-items:center; justify-content:center;
   }
   .clear-btn:hover{ background:rgba(255,255,255,0.15); }
+  .back-btn{
+    position:absolute; left:8px; top:50%; transform:translateY(-50%);
+    width:30px; height:30px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(255,255,255,0.08); color:var(--gold-light); font-size:16px;
+    display:flex; align-items:center; justify-content:center; z-index:2;
+  }
+  .back-btn:hover{ background:rgba(255,255,255,0.15); }
+
+  /* ---- axtarış rejimi: baş hissə gizlənir, axtarış qutusu başa keçir ---- */
+  .hero-block{
+    transition:opacity .18s ease, max-height .25s ease, margin .25s ease;
+    overflow:hidden;
+  }
+  body.search-mode .hero-block{
+    opacity:0; max-height:0 !important; margin:0 !important; pointer-events:none;
+  }
+  body.search-mode .wrap{ padding-top:56px; }
+  body.search-mode #q{ padding-left:46px; }
   .status{ min-height:20px; font-size:13px; color:#8b9587; margin:14px 0 6px; }
   .status.err{color:#e2a08b;}
   #results{ margin-top:22px; display:flex; flex-direction:column; gap:14px; }
@@ -466,13 +484,13 @@
     </div>
   </div>
 
-  <div class="wrap">
-    <canvas id="fireworksCanvas" class="fireworks-canvas"></canvas>
-    <div class="monogram">K&nbsp;&amp;&nbsp;G</div>
-    <p class="couple">Kənan &amp; Günel</p>
-    <p class="date">28 avqust 2026</p>
+  <div class="wrap" id="wrap">
+    <canvas id="fireworksCanvas" class="fireworks-canvas hero-block"></canvas>
+    <div class="monogram hero-block">K&nbsp;&amp;&nbsp;G</div>
+    <p class="couple hero-block">Kənan &amp; Günel</p>
+    <p class="date hero-block">28 avqust 2026</p>
 
-    <div class="stats" id="stats">
+    <div class="stats hero-block" id="stats">
       <span><b id="statTotal">–</b> nəfər</span>
       <span class="sep">·</span>
       <span><b id="statArrived">–</b> gəlib</span>
@@ -480,16 +498,17 @@
       <span><b id="statTables">–</b> masa</span>
     </div>
 
-    <svg class="flourish" viewBox="0 0 120 14" xmlns="http://www.w3.org/2000/svg">
+    <svg class="flourish hero-block" viewBox="0 0 120 14" xmlns="http://www.w3.org/2000/svg">
       <line x1="0" y1="7" x2="46" y2="7" stroke="#c8a15a" stroke-width="1"/>
       <circle cx="60" cy="7" r="3" fill="none" stroke="#c8a15a" stroke-width="1"/>
       <line x1="74" y1="7" x2="120" y2="7" stroke="#c8a15a" stroke-width="1"/>
     </svg>
 
-    <h1>Qonağı qarşılayın</h1>
-    <p class="sub">Adını yazın, masasını görün. Gələndə adının üstünə vurub qeyd edin.</p>
+    <h1 class="hero-block">Qonağı qarşılayın</h1>
+    <p class="sub hero-block">Adını yazın, masasını görün. Gələndə adının üstünə vurub qeyd edin.</p>
 
     <div class="search-row">
+      <button id="backBtn" class="back-btn" aria-label="Geri" style="display:none;">←</button>
       <input id="q" type="text" placeholder="Qonağın adını yazın"
         autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false"
         inputmode="text" enterkeyhint="search" name="guest-search-field" disabled />
@@ -584,6 +603,7 @@
   const hintEl = document.getElementById('hint');
   const input = document.getElementById('q');
   const clearBtn = document.getElementById('clearQ');
+  const backBtn = document.getElementById('backBtn');
   const drawer = document.getElementById('drawer');
   const overlay = document.getElementById('overlay');
   const tableListEl = document.getElementById('tableList');
@@ -884,31 +904,38 @@
     buildPosterBadges();
   }
 
-  let hasScrolledForSearch = false;
-
-  function scrollSearchToTop(){
-    const rect = input.getBoundingClientRect();
-    const targetY = window.scrollY + rect.top - 14; // yuxarıda balaca boşluq
-    window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
+  function enterSearchMode(){
+    document.body.classList.add('search-mode');
+    backBtn.style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
-  input.addEventListener('focus', () => {
-    hasScrolledForSearch = false;
-    setTimeout(() => { scrollSearchToTop(); hasScrolledForSearch = true; }, 300);
-  });
+  function exitSearchMode(){
+    document.body.classList.remove('search-mode');
+    backBtn.style.display = 'none';
+  }
+
+  input.addEventListener('focus', enterSearchMode);
 
   input.addEventListener('input', () => {
     const q = normalize(input.value);
     clearBtn.style.display = q ? 'flex' : 'none';
     if(!q){ renderSearch([]); return; }
     renderSearch(rows.filter(r => normalize(r.ad).includes(q)));
-    if(!hasScrolledForSearch){
-      scrollSearchToTop();
-      hasScrolledForSearch = true;
-    }
   });
 
-  input.addEventListener('blur', () => { hasScrolledForSearch = false; });
+  input.addEventListener('blur', () => {
+    // klaviatura bağlanır, amma yazılan söz varsa "axtarış rejimi"ndə qalırıq
+    if(!input.value.trim()) exitSearchMode();
+  });
+
+  backBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    renderSearch([]);
+    input.blur();
+    exitSearchMode();
+  });
 
   clearBtn.addEventListener('click', () => {
     input.value = '';
